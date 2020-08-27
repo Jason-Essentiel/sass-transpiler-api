@@ -1,0 +1,49 @@
+{
+  "name": "sass-transpiler-api",
+  "version": "1.0.0",
+  "description": "Simple REST API to transpile SASS IRL over the network",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jason-Essentiel/sass-transpiler-api.git"
+  },
+  "author": {
+    "email": "jason@essentiel.io",
+    "name": "Jason d'Essentiel",
+    "url": "https://github.com/Jason-Essentiel"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "moment": "^2.27.0",
+    "node-sass": "^4.14.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      ".git",
+      "node_modules/**/node_modules"
+    ],
+    "delay": 2500,
+    "verbose": true,
+    "execMap": {
+      "js": "node server.js"
+    },
+    "watch": [
+      "src/",
+      "server.js"
+    ],
+    "env": {
+      "NODE_ENV": "development"
+    },
+    "ext": "js,json"
+  }
+}

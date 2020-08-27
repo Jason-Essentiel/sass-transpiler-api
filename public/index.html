@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>SASS Transpiler</title>
+
+		<link rel="stylesheet" href="css/style.css" />
+
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="sass">
+			<label for="sass-input">SASS</label>
+			<textarea id="sass-input" name="sass"></textarea>
+		</div>
+		<div id="css">
+			<label for="css-input">CSS</label>
+			<textarea id="css-input" name="css" onclick="this.select()" readonly></textarea>
+			<details>
+				<summary>Errors</summary>
+				<ul></ul>
+			</details>
+		</div>
+
+		<script src="js/app.js"></script>
+	</body>
+</html>
