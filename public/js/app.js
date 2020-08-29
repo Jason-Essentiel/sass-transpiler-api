@@ -73,17 +73,19 @@ function initEditors() {
 			"Ctrl-Space": "autocomplete",
 			...editorOptions.extraKeys,
 		},
+		readOnly: true
 		// hintOptions: {hint: synonyms}
 	});
 	const errorsList  = $('#errors');
+	const clipboard = $('#clipboard');
 
-	return [sassEditor, cssEditor, errorsList];
+	return [sassEditor, cssEditor, errorsList, clipboard];
 }
 
 window.addEventListener("load", onLoadEvent => {
 	const $loader = $('#loader');
 	$loader.hide();
-	const [sassEditor, cssEditor, errorsList] = initEditors();
+	const [sassEditor, cssEditor, errorsList, $clipboard] = initEditors();
 	let errorsFocused                         = false
 	errorsList
 		.hover(() => {
@@ -133,7 +135,7 @@ window.addEventListener("load", onLoadEvent => {
 		if (value.length === 0) return;
 		transpile(value);
 	}
-	const onSassChange        = (editor) => {
+	const onSassChange        = editor => {
 		$loader.hide();
 		if (timer) {
 			clearTimeout(timer);
@@ -146,6 +148,13 @@ window.addEventListener("load", onLoadEvent => {
 		$loader.show();
 		setTimer(editor)
 	};
+	const onCssClick          = editor => {
+		const value = editor.getValue();
+		$clipboard.text(value);
+		$clipboard[0].select();
+		document.execCommand('copy');
+	};
 
 	sassEditor.on('change', onSassChange);
+	cssEditor.on('mousedown', onCssClick);
 });
