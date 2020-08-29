@@ -1,0 +1,103 @@
+@mixin no-text-outline($color)
+	-webkit-text-fill-color: $color
+	/* Will override color (regardless of order) */
+	-webkit-text-stroke-width: 0
+	-webkit-text-stroke-color: transparent
+
+@mixin text-outline($color: white, $borderColor: black)
+	-webkit-text-fill-color: $color
+	/* Will override color (regardless of order) */
+	-webkit-text-stroke-width: 1px
+	-webkit-text-stroke-color: $borderColor
+
+*
+	box-sizing: border-box
+
+button
+	outline: none !important
+	&:focus
+		outline: none !important
+
+html, body
+	margin: 0
+	padding: 0
+	height: 100vh
+
+body
+	display: flex
+	flex-direction: row
+	overflow: hidden
+	background-color: #202020 !important
+
+	> main
+		display: flex
+		flex:
+			direction: row
+			grow: 1
+		> #sass, > #css
+			display: flex
+			flex-direction: column
+			flex-grow: 1
+			padding: 0 1rem 1rem 1rem
+
+			label
+				@include text-outline
+				font-family: "Arial Black", serif
+				font-size: 2rem
+				color: white
+
+			.CodeMirror
+				height: 100%
+				.CodeMirror-scroll
+					cursor: text
+
+			> header
+				display: flex
+				justify-content: space-between
+				align-items: center
+				flex:
+					direction: row
+
+				> details
+					flex-grow: 1
+					margin: 0
+					padding: 0
+
+					&[open]
+						display: flex
+						overflow: hidden
+						flex:
+							direction: column
+							grow: .8
+
+					> summary
+						font:
+							size: 1.5rem
+							family: "Arial", serif
+							weight: bold
+						color: black
+						direction: rtl
+						cursor: pointer
+						outline: none
+
+					> section
+						display: flex
+						flex:
+							direction: column
+							grow: 1
+
+						> label
+							@include no-text-outline(inherit)
+							font-size: 1rem
+							cursor: pointer
+
+				> section
+					display: flex
+					flex-direction: row
+					direction: rtl
+					flex-grow: 1
+					color: white
+		> #errors
+			flex-grow: 1
+			height: 100%
+			overflow: auto
