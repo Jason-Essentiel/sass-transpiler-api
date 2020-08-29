@@ -4,24 +4,103 @@
 		<meta charset="UTF-8" />
 		<title>SASS Transpiler</title>
 
-		<link rel="stylesheet" href="css/style.css" />
+		<link href="css/style.css" rel="stylesheet" />
+		<link href="styles/codemirror" rel="stylesheet" />
+		<link href="css/codemirror/themes/monokai.css" rel="stylesheet" />
+		<link href="styles/bootstrap" rel="stylesheet" />
 
+		<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<script src="scripts/bootstrap"></script>
+		<script src="scripts/codemirror"></script>
+		<script src="scripts/codemirror/sass"></script>
+		<script src="scripts/codemirror/css"></script>
+		<script src="js/app.js"></script>
 	</head>
 	<body>
-		<div id="sass">
-			<label for="sass-input">SASS</label>
-			<textarea id="sass-input" name="sass"></textarea>
+		<div class="modal fade" id="sassOptionsModal" tabindex="-1" aria-labelledby="sassOptionsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="sassOptionsModalLabel">Options SASS</h5>
+						<button aria-label="Close" class="close" data-dismiss="modal" type="button">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<section>
+							<span>Type de syntaxe</span>
+							<label for="indentedSyntax">
+								<input checked id="indentedSyntax" name="indentedSyntax" type="radio" value="true" />
+								Syntax indentée (.sass, sans accolades ni points-virgules)
+							</label>
+							<label for="nonIndentedSyntax">
+								<input id="nonIndentedSyntax" name="indentedSyntax" type="radio" value="false" />
+								Syntax classique (.scss, syntax css + imbrications)
+							</label>
+						</section>
+						<section>
+							<span>Type d'indentation</span>
+							<label for="tabIndent">
+								<input checked id="tabIndent" name="indentType" type="radio" value="tab" />
+								Tabulation(s)
+							</label>
+							<label for="spaceIndent">
+								<input id="spaceIndent" name="indentType" type="radio" value="space" />
+								Espace(s)
+							</label>
+						</section>
+						<section>
+							<label for="nbUnitPerIndent">
+								<input id="nbUnitPerIndent" min="1" name="nbIndent" type="number" value="1" />
+								Nombre d'espace/tabulation par indentation
+							</label>
+						</section>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
+						<!--<button class="btn btn-primary" type="button">Save changes</button>-->
+					</div>
+				</div>
+			</div>
 		</div>
-		<div id="css">
-			<label for="css-input">CSS</label>
-			<textarea id="css-input" name="css" onclick="this.select()" readonly></textarea>
-			<details>
-				<summary>Errors</summary>
-				<ul></ul>
-			</details>
-		</div>
-
-		<script src="js/app.js"></script>
+		<main>
+			<div id="sass">
+				<header>
+					<button type="button" class="btn btn-primary btn-disabled" data-toggle="modal" data-target="#sassOptionsModal" disabled>
+						Options
+					</button>
+					<label for="sass-input">SASS</label>
+				</header>
+				<textarea id="sass-input" name="sass"></textarea>
+			</div>
+			<div id="css">
+				<header>
+					<label for="css-input">CSS</label>
+					<section>
+						<!--Show/Hide errors-->
+						<button class="btn text-light border-0" data-toggle="collapse" data-target="#errors">
+							<svg class="bi" width="32" height="32" fill="currentColor" role="img">
+								<use xlink:href="icons/bootstrap#eye-fill"/>
+							</svg>
+						</button>
+						<!--LOADER-->
+						<div class="spinner-border text-primary" id="loader" role="status">
+							<span class="sr-only">Loading...</span>
+						</div>
+					</section>
+				</header>
+				<textarea id="css-input" name="css" onclick="this.select()" readonly></textarea>
+			</div>
+			<div class="list-group list-group-flush collapse" id="errors">
+				<div class="list-group-item">
+					<div class="d-flex w-100 justify-content-between">
+						<h5 class="mb-1"></h5>
+						<small></small>
+					</div>
+					<p class="mb-1"></p>
+				</div>
+			</div>
+		</main>
 	</body>
 </html>
