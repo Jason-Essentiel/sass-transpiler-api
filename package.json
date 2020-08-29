@@ -5,8 +5,12 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
-    "start": "node server.js"
+    "watch-code": "nodemon",
+    "watch-css": "node-sass -w public/css/ -o public/css/",
+    "dev": "concurrently --names \"SERVER,SASS\" --prefix \"{name}\" --prefix-colors \"green,magenta\" \"npm run watch-code\" \"npm run watch-css\"",
+    "build": "node-sass public/css/ -o public/css/",
+    "start": "npm run build & node server.js --mode production",
+    "jason:push": "ssh-agent bash -c \"ssh-add /c/Users/jauco/.ssh/id_rsa_essentiel; git push origin master\""
   },
   "repository": {
     "type": "git",
@@ -20,11 +24,17 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "bootstrap": "^4.5.2",
+    "bootstrap-icons": "^1.0.0",
+    "codemirror": "^5.57.0",
     "express": "^4.17.1",
+    "jquery": "^3.5.1",
     "moment": "^2.27.0",
     "node-sass": "^4.14.1"
   },
   "devDependencies": {
+    "@types/express": "^4.17.7",
+    "concurrently": "^5.3.0",
     "nodemon": "^2.0.4"
   },
   "nodemonConfig": {
