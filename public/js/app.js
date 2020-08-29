@@ -1,80 +1,151 @@
+const editorOptions = {
+	lineWrapping:   true,
+	theme:          'monokai',
+	indentUnit:     4,
+	tabSize:        4,
+	indentWithTabs: false,
+	smartIndent:    true,
+	extraKeys:      {
+		Tab:         (cm) => {
+			if (cm.getMode().name === 'null') {
+				cm.execCommand('insertTab');
+			} else {
+				if (cm.somethingSelected()) {
+					cm.execCommand('indentMore');
+				} else {
+					cm.execCommand('insertSoftTab');
+				}
+			}
+		},
+		Backspace:   (cm) => {
+			if (!cm.somethingSelected()) {
+				let cursorsPos    = cm.listSelections().map((selection) => selection.anchor);
+				let indentUnit    = cm.options.indentUnit;
+				let shouldDelChar = false;
+				for (let cursorIndex in cursorsPos) {
+					let cursorPos   = cursorsPos[cursorIndex];
+					let indentation = cm.getStateAfter(cursorPos.line).indented;
+					if (!(indentation !== 0 &&
+					      cursorPos.ch <= indentation &&
+					      cursorPos.ch % indentUnit === 0)) {
+						shouldDelChar = true;
+					}
+				}
+				if (!shouldDelChar) {
+					cm.execCommand('indentLess');
+				} else {
+					cm.execCommand('delCharBefore');
+				}
+			} else {
+				cm.execCommand('delCharBefore');
+			}
+		},
+		'Shift-Tab': (cm) => cm.execCommand('indentLess'),
+	},
+};
+
 /**
- * Simulate a key event.
- * @param { HTMLElement } element
- * @param { Number|string } code The keyCode of the key to simulate
- * @param { String } type (optional) The type of event : down, up or press. The default is down
- * @param { Object|undefined } modifiers (optional) An object which contains modifiers keys { ctrlKey: true, altKey: false, ...}
+ *
+ * @return {[CodeMirror, CodeMirror, jQuery.fn.init|jQuery]}
  */
-function simulateKey (element, code, type, modifiers) {
-	const evtName = (typeof(type) === "string") ? "key" + type : "keydown";
-	const modifier = (typeof(modifiers) === "object") ? modifiers : {
-		code: code,
-		key: code,
-		composed: true,
-		currentTarget: element
+function initEditors() {
+	const sassArea    = $('#sass textarea')[0];
+	const cssArea     = $('#css textarea')[0];
+	const sassOptions = {
+		mode:          "text/x-sass",
+		lineNumbers:   true,
+		matchBrackets: true,
+		...editorOptions,
+		extraKeys:     {
+			"Ctrl-Space": "autocomplete",
+			...editorOptions.extraKeys,
+		},
+		// hintOptions: {hint: synonyms}
 	};
+	const sassEditor  = CodeMirror.fromTextArea(sassArea, sassOptions);
+	const cssEditor   = CodeMirror.fromTextArea(cssArea, {
+		lineNumbers:   true,
+		lineWrapping:  true,
+		mode:          "text/css",
+		matchBrackets: true,
+		...editorOptions,
+		extraKeys:     {
+			"Ctrl-Space": "autocomplete",
+			...editorOptions.extraKeys,
+		},
+		// hintOptions: {hint: synonyms}
+	});
+	const errorsList  = $('#errors');
 
-	const event = document.createEvent("KeyboardEvent");
-	event.initEvent(evtName, true, true);
-	// event.initTextEvent(evtName, true, false, window, "", 6, navigator.language)
-
-	for (let i in modifiers)
-		event[i] = modifiers[i];
-
-	console.info('EVENT:', event);
-	document.dispatchEvent(event);
-}
-
-function indentDown(event) {
-	event.preventDefault();
-	event.target.focus();
-
-}
-function indentUp(event) {
-	event.preventDefault();
-	event.target.focus();
-	document.execCommand('insertText', false, '\t');
-	// simulateKey(9, 'press', undefined);
+	return [sassEditor, cssEditor, errorsList];
 }
 
 window.addEventListener("load", onLoadEvent => {
-	let content    = "";
-	const sassArea = document.getElementById('sass').querySelector('textarea');
-	const cssArea  = document.getElementById('css').querySelector('textarea');
-	let timer;
+	const $loader = $('#loader');
+	$loader.hide();
+	const [sassEditor, cssEditor, errorsList] = initEditors();
+	let errorsFocused                         = false
+	errorsList
+		.hover(() => {
+			console.info('Errors focused!');
+			errorsFocused = true;
+		}, () => {
+			console.info('Errors unfocused!');
+			errorsFocused = false;
+		});
 
-	async function onSassAreaChange(textarea) {
-		const {value} = textarea;
-		if (value !== content) {
-			content                = value;
-			const url = `${window.location.protocol}//${window.location.host}/transpile/sass`;
-			const transpileRequest = await axios.post(url, {
-				sass: value,
-				to: "css"
-			});
-			const response = JSON.parse(transpileRequest.data);
-			const { css } = response;
-			cssArea.value = css;
-		}
+	let prevCss = "";
+
+	let timer, timerDelay     = 1000;
+	const setTimer            = (editor) => {
+		timer = setTimeout(() => askForTranspilation(editor, editor.getValue()), timerDelay);
 	}
-	
-	sassArea.addEventListener('change', e => onSassAreaChange(e.target));
-	sassArea.addEventListener('keypress', e => console.info('keypress:', e));
-	sassArea.addEventListener('keydown', e => {
-		switch (e.code) {
-			case "Tab":
-				e.preventDefault();
-				sassArea.focus();
-				if (e.shiftKey)
-					indentDown(e);
-					// document.execCommand('', false, '\t');
-				else
-					indentUp(e);
-				break;
-			default:
-				break;
+	const transpile           = async (value) => {
+		const url                                = `${window.location.protocol}//${window.location.host}/transpile/sass`;
+		const transpileRequest                   = await axios.post(url, {
+			sass:    value,
+			to:      "css",
+			options: editorOptions,
+		});
+		const response                           = JSON.parse(transpileRequest.data);
+		const {css, error, started_at, ended_at} = response;
+		console.info(`Sent, transpiled and answered in ${new Date(new Date(ended_at).getTime() * 1000 - new Date(started_at).getTime() * 1000).getMilliseconds()}ms`);
+		cssEditor.setValue(css || cssEditor.getValue());
+		if (error) {
+			const refLi = errorsList.find(':first-child');
+			// Using [0] here to clone only the first element of jquery returned array
+			const li    = $.clone(refLi[0], true, true);
+			// Surrounding with jQuery because we cloned from a DOM element but not a jQuery one
+			const $li   = $(li);
+			$li.find('h5').text(`Erreur #${errorsList.children().length}`);
+			$li.find('small').text(`${new Date().toTimeString()}`);
+			$li.find('p').text(error);
+			// Same here, using [0] to insert only after the first DOM element in the jQuery find results
+			$li.insertAfter(refLi[0]);
+			if (errorsFocused === false)
+				errorsList.stop().animate({scrollTop: 0}, 500);
+			else
+				console.info('errors focused!');
 		}
-	});
+		$loader.hide();
+	};
+	const askForTranspilation = async (editor, value) => {
+		if (value.length === 0) return;
+		transpile(value);
+	}
+	const onSassChange        = (editor) => {
+		$loader.hide();
+		if (timer) {
+			clearTimeout(timer);
+			timer = undefined;
+		}
+		const value = editor.getValue();
+		if (value.length === 0) return setTimer(editor);
+		if (value === prevCss) return;
+		prevCss = value;
+		$loader.show();
+		setTimer(editor)
+	};
 
-	timer = setInterval(() => onSassAreaChange(sassArea), 100);
+	sassEditor.on('change', onSassChange);
 });
